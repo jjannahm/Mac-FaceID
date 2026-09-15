@@ -1,0 +1,153 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  MACOSX_DEPLOYMENT_TARGET: "14.0"
+  FACEKEY_SWIFT_TARGET: arm64-apple-macosx14.0
+
+jobs:
+  build:
+    name: Build & test (macOS)
+    runs-on: macos-15
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Install Python dependencies
+        run: |
+          python -m venv .venv
+          ./.venv/bin/pip install --upgrade pip wheel
+          ./.venv/bin/pip install -r requirements.txt
+
+      - name: Download models
+        run: bash scripts/download-models.sh
+
+      - name: Generate assets (icons + translations)
+        run: |
+          ./.venv/bin/python scripts/make_icon.py
+          ./.venv/bin/python scripts/make_appicon.py
+          ./.venv/bin/python scripts/make_i18n.py
+
+      - name: Recognition self-test
+        run: ./.venv/bin/python -m faceid.selftest
+
+      - name: Engine behaviour tests
+        run: ./.venv/bin/python tests/test_engine.py
+
+      - name: FaceKeyKit tests
+        run: swift test --package-path sdk
+
+      - name: Translations are complete
+        run: bash scripts/check-i18n.sh
+
+      - name: Build native helpers
+        run: bash scripts/build-helpers.sh
+
+      - name: Build PAM module
+        run: make -C pam
+
+      - name: Fetch Sparkle
+        run: bash scripts/fetch-sparkle.sh
+
+      - name: Compile menu bar app
+        run: |
+          swiftc -O -swift-version 5 -target "$FACEKEY_SWIFT_TARGET" -o /tmp/FaceKey \
+            menubar/Branding.swift menubar/Onboarding.swift \
+            menubar/SettingsView.swift menubar/SetupFlow.swift \
+            menubar/SetupSheet.swift menubar/Uninstaller.swift \
+            menubar/HelperManager.swift \
+            helpertool/HelperProtocol.swift menubar/FaceIDApp.swift \
+            -framework AppKit -framework SwiftUI \
+            -framework AVFoundation -framework ServiceManagement -framework Security \
+            -F vendor/sparkle -framework Sparkle \
+            -Xlinker -rpath -Xlinker @executable_path/../Frameworks
+
+      - name: Compile privileged helper
+        run: |
+          swiftc -O -swift-version 5 -target "$FACEKEY_SWIFT_TARGET" -o /tmp/FaceKeyHelper \
+            helpertool/main.swift helpertool/HelperProtocol.swift \
+            helpertool/CodesignCheck.swift \
+            -framework Foundation -framework Security
+
+  bundle:
+    # Assemble the shippable bundle on the oldest supported macOS and actually run the
+    # frozen engine there. This is what catches a build that silently inherits a newer
+    # deployment target: 1.0.1 shipped requiring macOS 26 while advertising 13.0.
+    name: Bundle on macOS ${{ matrix.macos }}
+    runs-on: macos-${{ matrix.macos }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        # Every supported major release. 1.0.2 worked on 26 and silently fell back to
+        # the password on 15, because /etc/pam.d/sudo there has no sudo_local include.
+        macos: [14, 15, 26]
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Install Python dependencies
+        run: |
+          python -m venv .venv
+          ./.venv/bin/pip install --upgrade pip wheel
+          ./.venv/bin/pip install -r requirements.txt
+
+      - name: Download models
+        run: bash scripts/download-models.sh
+
+      - name: Build the standalone bundle
+        run: bash scripts/build-standalone.sh
+
+      - name: Run the frozen engine from the bundle
+        run: |
+          RES="dist/FaceKey.app/Contents/Resources"
+          FACEID_MODELS_DIR="$PWD/$RES/models" \
+          FACEID_ASSETS_DIR="$PWD/$RES/assets" \
+          FACEID_HELPERS_DIR="$PWD/$RES/helpers" \
+          "$RES/faceid/faceid" selftest
+
+      - name: Check the advertised minimum matches the binaries
+        run: |
+          PLIST_MIN=$(/usr/libexec/PlistBuddy -c "Print :LSMinimumSystemVersion" \
+            dist/FaceKey.app/Contents/Info.plist)
+          echo "Info.plist advertises macOS $PLIST_MIN"
+          bash scripts/check-macos-compat.sh dist/FaceKey.app
+
+      - name: PAM module loads
+        run: bash scripts/check-pam-module.sh dist/FaceKey.app/Contents/Resources/pam/pam_faceid.so
+
+      - name: sudo actually consults the module
+        run: bash scripts/check-pam-chain.sh dist/FaceKey.app
+
+      - name: Reported failure is reproduced and repaired
+        run: bash scripts/check-pam-repair.sh dist/FaceKey.app
+
+      # Le paquet est le chemin d'installation à une seule autorisation. On vérifie
+      # qu'il se construit et que l'Installeur accepte sa distribution, sans l'installer.
+      - name: Installer package builds
+        run: |
+          bash scripts/build-pkg.sh dist/FaceKey.app dist/FaceKey.pkg
+          installer -pkg dist/FaceKey.pkg -target / -showChoiceChangesXML >/dev/null
+          pkgutil --expand dist/FaceKey.pkg /tmp/pkg-check
+          test -f /tmp/pkg-check/sudo.pkg/Scripts/postinstall
+          grep -q 'Applications/FaceKey.app' <(lsbom -p f /tmp/pkg-check/app.pkg/Bom)
+
+      - name: Clean up
+        if: always()
+        run: sudo rm -f /etc/pam.d/sudo_local /usr/local/lib/pam/pam_faceid.so

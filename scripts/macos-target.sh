@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Shared deployment target for every native component in the app bundle.
+# Keep this in sync with Info.plist, appcast.xml, README, and CI.
+: "${MACOSX_DEPLOYMENT_TARGET:=14.0}"
+: "${FACEKEY_SWIFT_TARGET:=arm64-apple-macosx${MACOSX_DEPLOYMENT_TARGET}}"
+
+export MACOSX_DEPLOYMENT_TARGET
+export FACEKEY_SWIFT_TARGET

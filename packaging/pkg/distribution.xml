@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Le paquet est en deux morceaux pour que l'intégration sudo reste un choix : brancher
+  la reconnaissance faciale sur `sudo` sans le demander serait déplacé, même si c'est la
+  raison d'être de l'app. La case est cochée par défaut, et se décoche ; l'app sait de
+  toute façon activer sudo plus tard depuis ses réglages.
+-->
+<installer-gui-script minSpecVersion="2">
+    <title>FaceKey</title>
+    <organization>com.jjannahm</organization>
+    <!-- customize="always" : l'écran « Type d'installation » s'ouvre directement sur la
+         liste des options. Avec "allow", la case « Enable Face ID for sudo » se cache
+         derrière un bouton « Personnaliser » que personne ne clique — l'utilisateur
+         n'avait donc aucune idée de ce qu'il acceptait. -->
+    <options customize="always" require-scripts="false" hostArchitectures="arm64"/>
+
+    <!-- Destination explicite. Sans cette déclaration, l'Installeur décide seul et saute
+         l'étape sans rien dire ; ici on annonce clairement une installation système. -->
+    <domains enable_anywhere="false" enable_currentUserHome="false" enable_localSystem="true"/>
+
+    <volume-check>
+        <allowed-os-versions>
+            <os-version min="14.0"/>
+        </allowed-os-versions>
+    </volume-check>
+
+    <welcome file="welcome.html" mime-type="text/html"/>
+    <conclusion file="conclusion.html" mime-type="text/html"/>
+
+    <choices-outline>
+        <line choice="app"/>
+        <line choice="sudo"/>
+    </choices-outline>
+
+    <choice id="app"
+            title="FaceKey"
+            description="The app itself, installed in your Applications folder. Required."
+            enabled="false"
+            selected="true">
+        <pkg-ref id="com.jjannahm.FaceKey.app"/>
+    </choice>
+
+    <choice id="sudo"
+            title="Enable Face ID for sudo"
+            description="Sets up sudo now, using the password you just entered. Leaving this on saves you two macOS permission prompts later. Your password always stays as a fallback, and FaceKey can turn this off or back on at any time."
+            selected="true">
+        <pkg-ref id="com.jjannahm.FaceKey.sudo"/>
+    </choice>
+
+    <pkg-ref id="com.jjannahm.FaceKey.app" version="0" onConclusion="none">app.pkg</pkg-ref>
+    <pkg-ref id="com.jjannahm.FaceKey.sudo" version="0" onConclusion="none">sudo.pkg</pkg-ref>
+</installer-gui-script>
