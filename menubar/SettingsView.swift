@@ -53,7 +53,7 @@ struct SettingsView: View {
         }
         .frame(width: 500, height: 720)
         .background(VisualEffect().ignoresSafeArea())
-        .onAppear { refreshStatus() }
+        .onAppear { refreshStatus(); lockUnlock.refresh() }
         .sheet(isPresented: $showingSetup) {
             SetupSheet(flow: setup) {
                 showingSetup = false
@@ -214,8 +214,15 @@ struct SettingsView: View {
                     .foregroundStyle(lockUnlock.accessibilityTrusted ? Brand.green : .orange)
                 Spacer()
                 if !lockUnlock.accessibilityTrusted {
-                    Button("Allow Accessibility") { lockUnlock.requestAccessibility() }
+                    Button("Open Accessibility Settings") {
+                        lockUnlock.requestAccessibility()
+                        lockUnlock.openAccessibilitySettings()
+                    }
                 }
+            }
+            if !lockUnlock.accessibilityTrusted {
+                Text("If FaceKey is already enabled there, remove it and add /Applications/FaceKey.app again. Ad-hoc development updates have a new macOS code identity.")
+                    .font(.system(size: 10.5)).foregroundStyle(.secondary)
             }
 
             SecureField("macOS login password", text: $lockPassword)

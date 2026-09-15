@@ -54,6 +54,15 @@ final class LockUnlockCoordinator: ObservableObject {
                                              object: nil, queue: .main) { [weak self] _ in
             if !Self.sessionIsLocked { self?.didUnlock() }
         })
+        observers.append(NotificationCenter.default.addObserver(
+            forName: NSApplication.didBecomeActiveNotification, object: nil, queue: .main
+        ) { [weak self] _ in
+            // Accessibility is commonly granted while FaceKey is in the background.
+            // Refresh as soon as the user returns instead of preserving the pre-prompt
+            // value captured one second after the request.
+            self?.refresh()
+            self?.beginIfPossible()
+        })
         refresh()
         beginIfPossible()
     }
@@ -74,6 +83,13 @@ final class LockUnlockCoordinator: ObservableObject {
         let key = kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String
         _ = AXIsProcessTrustedWithOptions([key: true] as CFDictionary)
         DispatchQueue.main.asyncAfter(deadline: .now() + 1) { self.refresh() }
+    }
+
+    func openAccessibilitySettings() {
+        guard let url = URL(string:
+            "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")
+        else { return }
+        NSWorkspace.shared.open(url)
     }
 
     func savePassword(_ password: String) throws {
