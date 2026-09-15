@@ -4,4 +4,4 @@ numpy>=1.26
 # d'interface graphique pesaient une dizaine de mégaoctets pour rien.
 opencv-python-headless>=4.9,<5
 pyinstaller>=6.21,<7
-cryptography>=42,<46
+cryptography>=50.0.1,<51
