@@ -25,3 +25,8 @@ swiftc -O -target "$FACEKEY_SWIFT_TARGET" -o "$HERE/helpers/action-modal" \
 echo "== Compilation faceid-hud (capsule Dynamic Island) =="
 swiftc -O -target "$FACEKEY_SWIFT_TARGET" -o "$HERE/helpers/faceid-hud" "$HERE/helpers/faceid-hud.swift" -framework AppKit -framework QuartzCore
 echo "   -> $HERE/helpers/faceid-hud"
+
+echo "== Compilation builtin-camera (caméra Mac uniquement) =="
+swiftc -O -target "$FACEKEY_SWIFT_TARGET" -o "$HERE/helpers/builtin-camera" \
+  "$HERE/helpers/builtin-camera.swift" -framework AVFoundation -framework CoreImage
+echo "   -> $HERE/helpers/builtin-camera"

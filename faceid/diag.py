@@ -9,9 +9,8 @@ import sys
 import time
 
 import numpy as np
-import cv2
-
 from . import config
+from .camera import BuiltinCamera
 from .recognizer import FaceEngine, load_embeddings, best_match
 
 
@@ -45,8 +44,8 @@ def main():
     enrollment_health(enrolled)
 
     print(f"\n=== Capture live {duration:.0f}s (regarde la caméra) ===")
-    cap = cv2.VideoCapture(config.CAMERA_INDEX)
-    if not cap.isOpened():
+    cap = BuiltinCamera()
+    if not cap.open():
         print("ERREUR : caméra non autorisée/indisponible dans CE contexte.",
               file=sys.stderr)
         return 2

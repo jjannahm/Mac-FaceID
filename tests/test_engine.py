@@ -21,7 +21,6 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 import numpy as np                                          # noqa: E402
-import cv2                                                  # noqa: E402
 
 from faceid import config, daemon, recognizer               # noqa: E402
 
@@ -73,7 +72,7 @@ class SlowCapture:
     def __init__(self):
         self.released = False
 
-    def isOpened(self):                                     # noqa: N802 (API OpenCV)
+    def open(self):
         return True
 
     def set(self, *_):
@@ -90,8 +89,8 @@ class SlowCapture:
 def test_cancel():
     print("abandon depuis la capsule")
     fake = SlowCapture()
-    original = cv2.VideoCapture
-    cv2.VideoCapture = lambda *a, **k: fake
+    original = daemon.BuiltinCamera
+    daemon.BuiltinCamera = lambda: fake
     try:
         d = daemon.Daemon.__new__(daemon.Daemon)
         d.enrolled = np.random.rand(4, 128).astype(np.float32)
@@ -111,7 +110,7 @@ def test_cancel():
               f"{elapsed:.2f}s au lieu de 30s")
         check("la caméra est relâchée", fake.released)
     finally:
-        cv2.VideoCapture = original
+        daemon.BuiltinCamera = original
 
 
 # ------------------------------------------------------------------- apparences
@@ -145,7 +144,8 @@ def test_flags():
     check("la capsule est présente par défaut", config.HUD_ENABLED is True)
     check("capture en 640×480",
           (config.CAPTURE_WIDTH, config.CAPTURE_HEIGHT) == (640, 480))
-    check("caméra intégrée verrouillée sur l'index 0", config.CAMERA_INDEX == 0)
+    check("sélecteur natif de caméra intégrée configuré",
+          config.BUILTIN_CAMERA.name == "builtin-camera")
     # Une variable posée mais vide valait « activé », parce que "" n'est pas "0".
     check("une variable vide vaut le défaut", config._flag("ABSENTE_ICI", "0") is False)
 

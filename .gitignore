@@ -22,6 +22,7 @@ helpers/touchid-helper
 helpers/auth-modal
 helpers/action-modal
 helpers/faceid-hud
+helpers/builtin-camera
 
 # --- Assets générés (régénérés au build) ---
 assets/faceid-icon.png

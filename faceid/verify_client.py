@@ -11,7 +11,9 @@ from . import config
 
 def main():
     s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-    s.settimeout(config.VERIFY_TIMEOUT_S + 6)
+    # The optional method chooser can remain open while the user decides. Match the
+    # PAM client's bound so a successful scan is not reported as a client timeout.
+    s.settimeout(120)
     try:
         s.connect(str(config.SOCKET_PATH))
         s.sendall(b"VERIFY\n")

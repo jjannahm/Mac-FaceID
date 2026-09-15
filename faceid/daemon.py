@@ -18,9 +18,8 @@ import ctypes
 import json
 import re
 
-import cv2
-
 from . import config
+from .camera import BuiltinCamera
 from .recognizer import FaceEngine, load_embeddings, best_match
 
 _libc = ctypes.CDLL(None, use_errno=True)
@@ -226,15 +225,9 @@ class Daemon:
             return False, "no-enrollment"
         tmo = timeout if timeout else config.VERIFY_TIMEOUT_S
 
-        # Backend explicite : sans lui, OpenCV essaie ses backends dans l'ordre et perd
-        # du temps avant de retomber sur AVFoundation, le seul qui marche ici.
-        cap = cv2.VideoCapture(config.CAMERA_INDEX, cv2.CAP_AVFOUNDATION)
-        if not cap.isOpened():
+        cap = BuiltinCamera()
+        if not cap.open():
             return False, "camera-unavailable"
-        # 640×480 suffit largement : le visage doit faire 80 px au minimum, et une frame
-        # plus petite arrive plus vite et se détecte plus vite.
-        cap.set(cv2.CAP_PROP_FRAME_WIDTH, config.CAPTURE_WIDTH)
-        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, config.CAPTURE_HEIGHT)
 
         _adaptive_warmup(cap)
 

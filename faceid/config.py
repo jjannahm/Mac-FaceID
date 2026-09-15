@@ -21,6 +21,7 @@ TOUCHID_HELPER = HELPERS_DIR / "touchid-helper"
 AUTH_MODAL = HELPERS_DIR / "auth-modal"    # panneau natif AppKit
 ACTION_MODAL = HELPERS_DIR / "action-modal"
 FACEID_HUD = HELPERS_DIR / "faceid-hud"    # capsule Dynamic Island
+BUILTIN_CAMERA = HELPERS_DIR / "builtin-camera"
 
 def _flag(name, default):
     """Drapeau on/off depuis l'environnement.
@@ -144,8 +145,5 @@ ALLOWED_CLIENTS = {
 # Taille minimale (px) du visage détecté pour être exploitable.
 MIN_FACE_SIZE = int(os.environ.get("FACEID_MIN_FACE", "80"))
 
-# FaceKey for Mac intentionally supports the built-in FaceTime camera only. On the
-# supported MacBook configuration OpenCV's AVFoundation backend exposes it as index 0.
-# Do not accept an environment or saved-preference override: that could re-enable an
-# iPhone Continuity Camera after the user explicitly chose to exclude it.
-CAMERA_INDEX = 0
+# Camera selection is performed by the native helper using AVFoundation's
+# builtInWideAngleCamera device type. No numeric index or override is accepted.

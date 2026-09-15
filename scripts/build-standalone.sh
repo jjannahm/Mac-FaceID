@@ -12,8 +12,8 @@ export PYINSTALLER_CONFIG_DIR="${PYINSTALLER_CONFIG_DIR:-/tmp/mugshot-pyinstalle
 APP="$HERE/dist/FaceKey.app"
 RES="$APP/Contents/Resources"
 BUNDLE_ID="com.jjannahm.FaceKey"
-MARKETING_VERSION="${MARKETING_VERSION:-1.0.1}"
-BUILD_VERSION="${BUILD_VERSION:-2}"
+MARKETING_VERSION="${MARKETING_VERSION:-1.0.2}"
+BUILD_VERSION="${BUILD_VERSION:-3}"
 MODELS="${FACEID_MODELS_DIR:-$HOME/Library/Application Support/FaceKey/models}"
 
 echo "══ 1/6  Prérequis (modèles, helpers, module PAM, assets, i18n) ══"
@@ -103,7 +103,7 @@ cp "$HERE/assets/faceid-icon.png" "$RES/faceid-icon.png"
 cp "$HERE/assets/menubar-icon.png" "$RES/menubar-icon.png"
 cp -R "$HERE/packaging/dist/faceid" "$RES/faceid"                 # moteur Python autonome
 mkdir -p "$RES/helpers" "$RES/assets" "$RES/models" "$RES/pam" "$RES/scripts"
-cp "$HERE/helpers/touchid-helper" "$HERE/helpers/auth-modal" "$HERE/helpers/action-modal" "$HERE/helpers/faceid-hud" "$RES/helpers/"
+cp "$HERE/helpers/touchid-helper" "$HERE/helpers/auth-modal" "$HERE/helpers/action-modal" "$HERE/helpers/faceid-hud" "$HERE/helpers/builtin-camera" "$RES/helpers/"
 cp "$HERE/assets/faceid-icon.png" "$RES/assets/"
 # Icône du dialogue de repli osascript. Elle venait de assets/FaceID.icns, reliquat de
 # l'ancien nom du projet ; FaceKey.icns est régénérée à chaque build depuis la même

@@ -86,7 +86,8 @@ cp "$HERE/pam/pam_faceid.so" "$APP/Contents/Resources/pam/" 2>/dev/null || true
 cp "$HERE/scripts/pam-install-root.sh" "$HERE/scripts/pam-uninstall-root.sh" \
    "$HERE/scripts/diagnose.sh" "$APP/Contents/Resources/scripts/"
 mkdir -p "$APP/Contents/Resources/helpers"
-cp "$HERE/helpers/action-modal" "$APP/Contents/Resources/helpers/" 2>/dev/null || true
+cp "$HERE/helpers/action-modal" "$HERE/helpers/builtin-camera" \
+   "$APP/Contents/Resources/helpers/" 2>/dev/null || true
 
 echo "== Traductions (.lproj + engine.json) =="
 "$HERE/.venv/bin/python" "$HERE/scripts/make_i18n.py"

@@ -13,9 +13,8 @@ import json
 import time
 
 import numpy as np
-import cv2
-
 from . import config
+from .camera import BuiltinCamera
 from .recognizer import FaceEngine, load_embeddings, save_embeddings
 
 JSON = "--json" in sys.argv
@@ -62,13 +61,10 @@ def main():
         emit(event="error", msg="models-missing", detail=str(e))
         return 1
 
-    cap = cv2.VideoCapture(config.CAMERA_INDEX, cv2.CAP_AVFOUNDATION)
-    if not cap.isOpened():
+    cap = BuiltinCamera()
+    if not cap.open():
         emit(event="error", msg="camera-unavailable")
         return 1
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, config.CAPTURE_WIDTH)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, config.CAPTURE_HEIGHT)
-
     for _ in range(config.CAMERA_WARMUP_FRAMES):
         cap.read()
 
