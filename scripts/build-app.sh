@@ -65,6 +65,7 @@ cat > "$APP/Contents/Info.plist" <<PLIST
   </array>
   <key>NSCameraUsageDescription</key>
   <string>FaceKey uses the camera for local face enrollment and explicit approvals.</string>
+  <key>NSCameraUseContinuityCameraDeviceType</key><false/>
   <key>FaceIDProjectRoot</key>       <string>${HERE}</string>
 </dict>
 </plist>

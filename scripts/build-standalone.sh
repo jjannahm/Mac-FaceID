@@ -88,6 +88,7 @@ cat > "$APP/Contents/Info.plist" <<PLIST
   <key>SUEnableAutomaticChecks</key> <true/>
   <key>NSCameraUsageDescription</key>
   <string>FaceKey uses the camera for local face enrollment and explicit approvals.</string>
+  <key>NSCameraUseContinuityCameraDeviceType</key><false/>
 </dict>
 </plist>
 PLIST

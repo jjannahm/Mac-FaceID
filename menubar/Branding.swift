@@ -74,13 +74,10 @@ enum Cameras {
         let isContinuity: Bool
     }
 
-    /// Même énumération que helpers/camera-list, pour que les index concordent.
+    /// Match OpenCV's AVFoundation indexing exactly. DiscoverySession ordering can
+    /// differ when Continuity Camera is present.
     static func list() -> [Device] {
-        var types: [AVCaptureDevice.DeviceType] = [.builtInWideAngleCamera, .external]
-        if #available(macOS 14.0, *) { types.append(.continuityCamera) }
-        let session = AVCaptureDevice.DiscoverySession(
-            deviceTypes: types, mediaType: .video, position: .unspecified)
-        return session.devices.enumerated().map { index, device in
+        AVCaptureDevice.devices(for: .video).enumerated().map { index, device in
             var continuity = device.modelID.contains("iPhone") || device.modelID.contains("iPad")
             if #available(macOS 14.0, *), device.deviceType == .continuityCamera { continuity = true }
             return Device(id: index, name: device.localizedName, isContinuity: continuity)
@@ -116,7 +113,14 @@ final class Settings: ObservableObject {
         threshold = d.object(forKey: "faceid.threshold") as? Double ?? 0.36
         modal = d.object(forKey: "faceid.modal") as? Bool ?? false
         hud = d.object(forKey: "faceid.hud") as? Bool ?? true
-        cameraIndex = d.object(forKey: "faceid.camera") as? Int ?? -1
+        if let saved = d.object(forKey: "faceid.camera") as? Int {
+            cameraIndex = saved
+        } else {
+            // Persist the built-in choice rather than delegating to OpenCV index 0.
+            cameraIndex = Cameras.list().first(where: { !$0.isContinuity &&
+                $0.name.localizedCaseInsensitiveContains("FaceTime") })?.id
+                ?? Cameras.list().first(where: { !$0.isContinuity })?.id ?? -1
+        }
     }
 
     var env: [String: String] {

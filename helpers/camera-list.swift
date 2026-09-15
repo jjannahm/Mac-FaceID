@@ -12,15 +12,12 @@
 import AVFoundation
 import Foundation
 
-var types: [AVCaptureDevice.DeviceType] = [.builtInWideAngleCamera, .external]
-if #available(macOS 14.0, *) {
-    types.append(.continuityCamera)
-}
+// OpenCV's AVFoundation backend still indexes `devices(for:)`. A DiscoverySession may
+// return a different order (notably with Continuity Camera), causing an index selected
+// as "built-in" here to open the iPhone in OpenCV.
+let devices = AVCaptureDevice.devices(for: .video)
 
-let session = AVCaptureDevice.DiscoverySession(
-    deviceTypes: types, mediaType: .video, position: .unspecified)
-
-for (index, device) in session.devices.enumerated() {
+for (index, device) in devices.enumerated() {
     var kind = "external"
     if device.deviceType == .builtInWideAngleCamera {
         kind = "builtin"
