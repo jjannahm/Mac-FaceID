@@ -22,6 +22,9 @@ func T(_ en: String, _ fr: String) -> String { isFR ? fr : en }
 let GREEN = NSColor(calibratedRed: 0.525, green: 0.910, blue: 0.541, alpha: 1) // #86E88A
 let RED   = NSColor(calibratedRed: 1.0,   green: 0.353, blue: 0.322, alpha: 1) // #FF5A52
 let PILL  = NSColor(calibratedWhite: 0.04, alpha: 1.0)
+// Lock-screen unlock keeps the green confirmation visible one extra second. Regular
+// sudo/app approvals retain their quicker feedback timing.
+let SUCCESS_HOLD: TimeInterval = CommandLine.arguments.contains("--lock") ? 2.15 : 1.15
 
 // ---------- géométrie ----------
 let W: CGFloat = 216, H: CGFloat = 56
@@ -234,7 +237,7 @@ final class HUD: NSObject, NSApplicationDelegate {
         }
         bounce()
         // léger halo vert de la pilule
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.15) { self.dismiss() }
+        DispatchQueue.main.asyncAfter(deadline: .now() + SUCCESS_HOLD) { self.dismiss() }
     }
 
     func failed() {

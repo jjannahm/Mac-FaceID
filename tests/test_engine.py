@@ -113,6 +113,30 @@ def test_cancel():
         daemon.BuiltinCamera = original
 
 
+def test_lock_hud_timing_mode():
+    print("capsule de déverrouillage")
+    calls = []
+
+    class FakeHUD:
+        stdout = []
+
+    original_popen = daemon.subprocess.Popen
+    original_path, original_enabled = config.FACEID_HUD, config.HUD_ENABLED
+    daemon.subprocess.Popen = lambda args, **kwargs: calls.append(args) or FakeHUD()
+    config.FACEID_HUD = Path("/bin/echo")
+    config.HUD_ENABLED = True
+    try:
+        d = daemon.Daemon.__new__(daemon.Daemon)
+        d._hud_start(lock=False)
+        d._hud_start(lock=True)
+        check("sudo conserve la durée normale", calls[0] == ["/bin/echo"], str(calls[0]))
+        check("l'écran verrouillé demande la durée prolongée",
+              calls[1] == ["/bin/echo", "--lock"], str(calls[1]))
+    finally:
+        daemon.subprocess.Popen = original_popen
+        config.FACEID_HUD, config.HUD_ENABLED = original_path, original_enabled
+
+
 # ------------------------------------------------------------------- apparences
 def test_append():
     print("apparences cumulatives")
@@ -171,7 +195,7 @@ def test_i18n():
 def test_socket():
     print("protocole de la socket")
     # Chemin court obligatoire : une socket UNIX est limitée à ~104 caractères.
-    runtime = tempfile.mkdtemp(dir="/tmp", prefix="mg")
+    runtime = tempfile.mkdtemp(dir="/private/tmp", prefix="mg")
     env = dict(os.environ)
     env.update({
         "HOME": runtime,             # isole APP_DIR → aucun enrôlement, aucune caméra
@@ -199,7 +223,7 @@ def test_socket():
         if os.path.exists(sock_path):
             break
         if proc.poll() is not None:
-            check("le daemon démarre", False, proc.stdout.read()[:200])
+            check("le daemon démarre", False, proc.stdout.read()[:2000])
             return
         time.sleep(0.1)
     else:
@@ -268,7 +292,7 @@ def test_app_authorization():
 
 
 def main():
-    for test in (test_warmup, test_cancel, test_append,
+    for test in (test_warmup, test_cancel, test_lock_hud_timing_mode, test_append,
                  test_flags, test_i18n, test_socket, test_app_authorization):
         test()
     print()

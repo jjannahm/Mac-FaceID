@@ -12,8 +12,8 @@ export PYINSTALLER_CONFIG_DIR="${PYINSTALLER_CONFIG_DIR:-/tmp/mugshot-pyinstalle
 APP="$HERE/dist/FaceKey.app"
 RES="$APP/Contents/Resources"
 BUNDLE_ID="com.jjannahm.FaceKey"
-MARKETING_VERSION="${MARKETING_VERSION:-1.1.0}"
-BUILD_VERSION="${BUILD_VERSION:-4}"
+MARKETING_VERSION="${MARKETING_VERSION:-1.1.1}"
+BUILD_VERSION="${BUILD_VERSION:-5}"
 MODELS="${FACEID_MODELS_DIR:-$HOME/Library/Application Support/FaceKey/models}"
 
 echo "══ 1/6  Prérequis (modèles, helpers, module PAM, assets, i18n) ══"

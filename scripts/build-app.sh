@@ -49,8 +49,8 @@ cat > "$APP/Contents/Info.plist" <<PLIST
   <key>CFBundleExecutable</key>      <string>FaceKey</string>
   <key>CFBundleIconFile</key>        <string>FaceKey</string>
   <key>CFBundlePackageType</key>     <string>APPL</string>
-  <key>CFBundleShortVersionString</key> <string>1.1.0</string>
-  <key>CFBundleVersion</key>         <string>4</string>
+  <key>CFBundleShortVersionString</key> <string>1.1.1</string>
+  <key>CFBundleVersion</key>         <string>5</string>
   <key>LSUIElement</key>             <true/>
   <key>LSMinimumSystemVersion</key>  <string>${MACOSX_DEPLOYMENT_TARGET}</string>
   <key>SUFeedURL</key>               <string>https://raw.githubusercontent.com/jjannahm/facekey-macos/main/appcast.xml</string>
