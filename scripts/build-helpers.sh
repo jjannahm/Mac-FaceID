@@ -25,7 +25,3 @@ swiftc -O -target "$FACEKEY_SWIFT_TARGET" -o "$HERE/helpers/action-modal" \
 echo "== Compilation faceid-hud (capsule Dynamic Island) =="
 swiftc -O -target "$FACEKEY_SWIFT_TARGET" -o "$HERE/helpers/faceid-hud" "$HERE/helpers/faceid-hud.swift" -framework AppKit -framework QuartzCore
 echo "   -> $HERE/helpers/faceid-hud"
-
-# camera-list: lets the daemon avoid the paired iPhone (Continuity Camera)
-swiftc -O -target "$FACEKEY_SWIFT_TARGET" -o "$HERE/helpers/camera-list" \
-  "$HERE/helpers/camera-list.swift" -framework AVFoundation

@@ -20,7 +20,6 @@ struct SettingsView: View {
     @State private var testResult: TestResult?
     // Listé une fois : brancher un iPhone pendant que la fenêtre est ouverte est rare,
     // et ré-interroger AVFoundation à chaque rendu réveillerait le téléphone.
-    @State private var cameras = Cameras.list()
 
     struct TestResult { let ok: Bool; let detail: String }
 
@@ -191,22 +190,6 @@ struct SettingsView: View {
                 Toggle(isOn: $settings.hud.onChange(applyDaemon)) {
                     Text(L("set.behavior.hud"))
                 }.toggleStyle(.switch).tint(Brand.green)
-
-                if cameras.count > 1 {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Picker(L("set.behavior.camera"),
-                               selection: $settings.cameraIndex.onChange(applyDaemon)) {
-                            Text(L("set.behavior.camera.auto")).tag(-1)
-                            ForEach(cameras) { camera in
-                                Text(camera.isContinuity
-                                     ? String(format: L("set.behavior.camera.iphone"), camera.name)
-                                     : camera.name).tag(camera.id)
-                            }
-                        }
-                        Text(L("set.behavior.camera.desc"))
-                            .font(.system(size: 11)).foregroundStyle(.secondary)
-                    }
-                }
 
                 sensitivityControl
 

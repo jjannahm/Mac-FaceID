@@ -145,6 +145,7 @@ def test_flags():
     check("la capsule est présente par défaut", config.HUD_ENABLED is True)
     check("capture en 640×480",
           (config.CAPTURE_WIDTH, config.CAPTURE_HEIGHT) == (640, 480))
+    check("caméra intégrée verrouillée sur l'index 0", config.CAMERA_INDEX == 0)
     # Une variable posée mais vide valait « activé », parce que "" n'est pas "0".
     check("une variable vide vaut le défaut", config._flag("ABSENTE_ICI", "0") is False)
 
