@@ -77,6 +77,7 @@ final class AppController: NSObject, NSApplicationDelegate {
     let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     let daemon = DaemonController()
     let enroll = EnrollController()
+    let lockUnlock = LockUnlockCoordinator()
     // Auto-update : démarre le vérificateur (check périodique via SUEnableAutomaticChecks).
     let updater = SPUStandardUpdaterController(startingUpdater: true,
                                                updaterDelegate: nil, userDriverDelegate: nil)
@@ -98,6 +99,7 @@ final class AppController: NSObject, NSApplicationDelegate {
         }
         daemon.env = Settings.shared.env
         daemon.start()
+        lockUnlock.start()
         refresh()
 
         // Auto-inscription au démarrage (une seule fois) : l'app + le daemon se
@@ -315,11 +317,12 @@ final class AppController: NSObject, NSApplicationDelegate {
 
     @objc func openSettings() {
         if settingsWC == nil {
-            let view = SettingsView(onEnroll: { [weak self] appending in
+            let view = SettingsView(lockUnlock: lockUnlock,
+                                    onEnroll: { [weak self] appending in
                                         self?.openEnrollment(appending: appending)
                                     },
                                     onApply: { [weak self] in self?.restartDaemon() })
-            let win = brandedWindow(width: 460, height: 620, titled: true)
+            let win = brandedWindow(width: 500, height: 720, titled: true)
             win.title = "FaceKey"
             win.contentView = NSHostingView(rootView: view)
             settingsWC = NSWindowController(window: win)

@@ -46,6 +46,11 @@ enum Uninstaller {
                 outcome.steps.append(L("uninstall.step.login"))
             }
 
+            // A login credential must never survive removal of the app, even when the
+            // user elects to keep the replaceable face enrollment for reinstalling.
+            LockPasswordStore.delete()
+            Settings.shared.lockUnlockEnabled = false
+
             // 3. Les données locales, seulement si on l'a demandé.
             if deleteData {
                 try? FileManager.default.removeItem(atPath: Paths.supportDir)

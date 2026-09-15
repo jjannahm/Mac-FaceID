@@ -12,8 +12,8 @@ export PYINSTALLER_CONFIG_DIR="${PYINSTALLER_CONFIG_DIR:-/tmp/mugshot-pyinstalle
 APP="$HERE/dist/FaceKey.app"
 RES="$APP/Contents/Resources"
 BUNDLE_ID="com.jjannahm.FaceKey"
-MARKETING_VERSION="${MARKETING_VERSION:-1.0.2}"
-BUILD_VERSION="${BUILD_VERSION:-3}"
+MARKETING_VERSION="${MARKETING_VERSION:-1.1.0}"
+BUILD_VERSION="${BUILD_VERSION:-4}"
 MODELS="${FACEID_MODELS_DIR:-$HOME/Library/Application Support/FaceKey/models}"
 
 echo "══ 1/6  Prérequis (modèles, helpers, module PAM, assets, i18n) ══"
@@ -58,8 +58,9 @@ rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$RES"
 swiftc -O -swift-version 5 -target "$FACEKEY_SWIFT_TARGET" -o "$APP/Contents/MacOS/FaceKey" \
   menubar/Branding.swift menubar/Onboarding.swift menubar/SettingsView.swift menubar/SetupFlow.swift menubar/SetupSheet.swift menubar/Uninstaller.swift \
+  menubar/LockPasswordStore.swift menubar/LockUnlockPolicy.swift menubar/LockUnlockCoordinator.swift \
   menubar/HelperManager.swift helpertool/HelperProtocol.swift menubar/FaceIDApp.swift \
-  -framework AppKit -framework SwiftUI -framework AVFoundation -framework ServiceManagement -framework Security \
+  -framework AppKit -framework SwiftUI -framework AVFoundation -framework ApplicationServices -framework ServiceManagement -framework Security \
   -F "$HERE/vendor/sparkle" -framework Sparkle \
   -Xlinker -rpath -Xlinker @executable_path/../Frameworks
 # daemon privilégié root (SMAppService + XPC)

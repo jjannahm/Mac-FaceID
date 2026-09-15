@@ -15,10 +15,13 @@ def main():
     if cmd == "verify":
         from faceid.verify_client import main as m
         return m()
+    if cmd == "verify-lock":
+        from faceid.verify_client import main as m
+        return m(lock=True)
     if cmd == "selftest":
         from faceid.selftest import main as m
         return m()
-    sys.stderr.write("usage: faceid {daemon|enroll|verify|selftest}\n")
+    sys.stderr.write("usage: faceid {daemon|enroll|verify|verify-lock|selftest}\n")
     return 2
 
 

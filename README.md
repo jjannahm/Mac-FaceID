@@ -2,7 +2,7 @@
 
 FaceKey is a native macOS menu-bar utility for **local, convenience-grade face authorization**. It enrolls a face on-device, can approve actions requested through `FaceKeyKit`, and can optionally let a successful match satisfy `sudo` while retaining the normal Touch ID/password fallback.
 
-> **Not Apple Face ID.** A normal RGB webcam has no infrared depth sensor and can be fooled by a photograph or video. FaceKey cannot unlock the macOS login screen, authorize Apple Pay or App Store purchases, or replace Touch ID. Never use it as the only protection for sensitive data or real payments.
+> **Not Apple Face ID.** A normal RGB webcam has no infrared depth sensor and can be fooled by a photograph or video. FaceKey cannot unlock FileVault or the first login after restart, authorize Apple Pay or App Store purchases, or replace Touch ID. Never use it as the only protection for sensitive data or real payments.
 
 ## Features
 
@@ -12,7 +12,20 @@ FaceKey is a native macOS menu-bar utility for **local, convenience-grade face a
 - Versioned `FaceKeyKit` Swift API with expiry, caller allowlisting, replay rejection, one-request-at-a-time enforcement, and explicit approval UI.
 - Demo checkout app that makes no charge and clearly shows integration behavior.
 - Optional PAM integration for `sudo`, configured as `sufficient` so failure always falls through to the system authentication stack.
+- Optional convenience unlock for an already logged-in session, using a device-only
+  Keychain password and Accessibility typing after a face match.
 - Diagnostics and an uninstaller that restores PAM configuration.
+
+## Optional lock-screen unlock
+
+Open FaceKey settings, save your macOS login password in Keychain, grant Accessibility,
+and enable **Convenience Lock-Screen Unlock**. When the current session locks, FaceKey
+uses only the MacBook's built-in camera; after a match it types the saved password once.
+
+This is password automation, not Secure Enclave authentication. It does not operate at
+FileVault, the first login after restart, fast user switching, purchases, or macOS
+authorization dialogs. Three failed recognition cycles suspend attempts until manual
+unlock. Uninstalling FaceKey always deletes the saved login password.
 
 ## Requirements and build
 

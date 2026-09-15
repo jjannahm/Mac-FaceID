@@ -8,6 +8,7 @@ import SwiftUI
 
 struct SettingsView: View {
     @ObservedObject var settings = Settings.shared
+    @ObservedObject var lockUnlock: LockUnlockCoordinator
     @StateObject private var setup = SetupFlow()
     var onEnroll: (_ appending: Bool) -> Void
     var onApply: () -> Void          // redémarre le daemon avec le nouvel env
@@ -18,6 +19,9 @@ struct SettingsView: View {
     @State private var note = ""
     @State private var showingSetup = false
     @State private var testResult: TestResult?
+    @State private var lockPassword = ""
+    @State private var lockPasswordConfirm = ""
+    @State private var lockError = ""
     // Listé une fois : brancher un iPhone pendant que la fenêtre est ouverte est rare,
     // et ré-interroger AVFoundation à chaque rendu réveillerait le téléphone.
 
@@ -33,6 +37,7 @@ struct SettingsView: View {
                 VStack(alignment: .leading, spacing: 22) {
                     faceSection
                     sudoSection
+                    lockUnlockSection
                     behaviourSection
                     if !note.isEmpty {
                         Text(note).font(.system(size: 11.5)).foregroundStyle(.secondary)
@@ -46,7 +51,7 @@ struct SettingsView: View {
             Divider()
             footer
         }
-        .frame(width: 460, height: 620)
+        .frame(width: 500, height: 720)
         .background(VisualEffect().ignoresSafeArea())
         .onAppear { refreshStatus() }
         .sheet(isPresented: $showingSetup) {
@@ -179,6 +184,61 @@ struct SettingsView: View {
         }
     }
 
+    // ---- déverrouillage de la session verrouillée (opt-in) ----
+    private var lockUnlockSection: some View {
+        section("CONVENIENCE LOCK-SCREEN UNLOCK") {
+            Toggle(isOn: Binding(
+                get: { lockUnlock.enabled },
+                set: { requested in
+                    if requested { confirmAndEnableLockUnlock() }
+                    else { lockUnlock.enabled = false }
+                }
+            )) {
+                Text("Use my face after this logged-in session locks")
+            }
+            .toggleStyle(.switch).tint(Brand.green)
+
+            Text("This is not Apple Face ID. After a local camera match, FaceKey types the password stored in your Keychain. It cannot unlock FileVault, first login after restart, purchases, or macOS security dialogs.")
+                .font(.system(size: 11)).foregroundStyle(.secondary)
+
+            HStack {
+                Label(lockUnlock.state.label,
+                      systemImage: lockUnlock.state == .waiting ? "checkmark.circle.fill" : "lock.circle")
+                    .foregroundStyle(lockUnlock.state == .waiting ? Brand.green : .secondary)
+                Spacer()
+            }
+
+            HStack {
+                Label(lockUnlock.accessibilityTrusted ? "Accessibility allowed" : "Accessibility required",
+                      systemImage: lockUnlock.accessibilityTrusted ? "checkmark.shield.fill" : "hand.raised.fill")
+                    .foregroundStyle(lockUnlock.accessibilityTrusted ? Brand.green : .orange)
+                Spacer()
+                if !lockUnlock.accessibilityTrusted {
+                    Button("Allow Accessibility") { lockUnlock.requestAccessibility() }
+                }
+            }
+
+            SecureField("macOS login password", text: $lockPassword)
+            SecureField("Confirm password", text: $lockPasswordConfirm)
+            HStack {
+                Button(lockUnlock.passwordConfigured ? "Update saved password" : "Save password") {
+                    saveLockPassword()
+                }
+                .disabled(lockPassword.isEmpty || lockPasswordConfirm.isEmpty)
+                if lockUnlock.passwordConfigured {
+                    Button("Delete saved password", role: .destructive) {
+                        lockUnlock.deletePassword()
+                        lockPassword = ""; lockPasswordConfirm = ""
+                    }
+                }
+                Spacer()
+            }
+            if !lockError.isEmpty {
+                Text(lockError).font(.system(size: 11)).foregroundStyle(.orange)
+            }
+        }
+    }
+
     // ---- section comportement ----
     private var behaviourSection: some View {
         section(L("set.section.behavior")) {
@@ -274,6 +334,32 @@ struct SettingsView: View {
     }
 
     private func applyDaemon() { onApply() }
+
+    private func saveLockPassword() {
+        lockError = ""
+        guard lockPassword == lockPasswordConfirm else {
+            lockError = "Passwords do not match."
+            return
+        }
+        do {
+            try lockUnlock.savePassword(lockPassword)
+            lockPassword = ""; lockPasswordConfirm = ""
+        } catch {
+            lockError = error.localizedDescription
+        }
+    }
+
+    private func confirmAndEnableLockUnlock() {
+        let alert = NSAlert()
+        alert.alertStyle = .warning
+        alert.messageText = "Enable convenience lock-screen unlock?"
+        alert.informativeText = "FaceKey will store your login password in this Mac’s Keychain and type it only while your current session is locked. RGB camera recognition can be fooled by a photo or video."
+        alert.addButton(withTitle: "Enable")
+        alert.addButton(withTitle: "Cancel")
+        guard alert.runModal() == .alertFirstButtonReturn else { return }
+        lockUnlock.enabled = true
+        if !lockUnlock.accessibilityTrusted { lockUnlock.requestAccessibility() }
+    }
 
     private func beginSetup() {
         note = ""

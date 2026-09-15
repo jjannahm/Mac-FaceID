@@ -85,10 +85,14 @@ final class Settings: ObservableObject {
     @Published var threshold: Double { didSet { d.set(threshold, forKey: "faceid.threshold") } }
     @Published var modal: Bool { didSet { d.set(modal, forKey: "faceid.modal") } }
     @Published var hud: Bool { didSet { d.set(hud, forKey: "faceid.hud") } }
+    @Published var lockUnlockEnabled: Bool {
+        didSet { d.set(lockUnlockEnabled, forKey: "faceid.lockUnlockEnabled") }
+    }
     private init() {
         threshold = d.object(forKey: "faceid.threshold") as? Double ?? 0.36
         modal = d.object(forKey: "faceid.modal") as? Bool ?? false
         hud = d.object(forKey: "faceid.hud") as? Bool ?? true
+        lockUnlockEnabled = d.object(forKey: "faceid.lockUnlockEnabled") as? Bool ?? false
         d.removeObject(forKey: "faceid.camera")
     }
 
@@ -119,12 +123,13 @@ enum Run {
         let rest = Array(sub.dropFirst())
         let mod: String
         switch cmd {
-        case "verify":   mod = "faceid.verify_client"
+        case "verify", "verify-lock": mod = "faceid.verify_client"
         case "enroll":   mod = "faceid.enroll"
         case "selftest": mod = "faceid.selftest"
         default:         mod = "faceid.daemon"
         }
-        return (Paths.python, ["-m", mod] + rest)
+        let moduleArgs = cmd == "verify-lock" ? ["--lock"] : rest
+        return (Paths.python, ["-m", mod] + moduleArgs)
     }
 
     /// Lance une sous-commande faceid en bloquant, retourne (code, sortie).

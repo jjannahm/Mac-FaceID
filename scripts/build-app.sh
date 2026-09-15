@@ -49,8 +49,8 @@ cat > "$APP/Contents/Info.plist" <<PLIST
   <key>CFBundleExecutable</key>      <string>FaceKey</string>
   <key>CFBundleIconFile</key>        <string>FaceKey</string>
   <key>CFBundlePackageType</key>     <string>APPL</string>
-  <key>CFBundleShortVersionString</key> <string>1.0.1</string>
-  <key>CFBundleVersion</key>         <string>2</string>
+  <key>CFBundleShortVersionString</key> <string>1.1.0</string>
+  <key>CFBundleVersion</key>         <string>4</string>
   <key>LSUIElement</key>             <true/>
   <key>LSMinimumSystemVersion</key>  <string>${MACOSX_DEPLOYMENT_TARGET}</string>
   <key>SUFeedURL</key>               <string>https://raw.githubusercontent.com/jjannahm/facekey-macos/main/appcast.xml</string>
@@ -105,10 +105,13 @@ swiftc -O -swift-version 5 \
   "$HERE/menubar/SetupFlow.swift" \
   "$HERE/menubar/SetupSheet.swift" \
   "$HERE/menubar/Uninstaller.swift" \
+  "$HERE/menubar/LockPasswordStore.swift" \
+  "$HERE/menubar/LockUnlockPolicy.swift" \
+  "$HERE/menubar/LockUnlockCoordinator.swift" \
   "$HERE/menubar/HelperManager.swift" \
   "$HERE/helpertool/HelperProtocol.swift" \
   "$HERE/menubar/FaceIDApp.swift" \
-  -framework AppKit -framework SwiftUI -framework AVFoundation -framework ServiceManagement -framework Security \
+  -framework AppKit -framework SwiftUI -framework AVFoundation -framework ApplicationServices -framework ServiceManagement -framework Security \
   -F "$HERE/vendor/sparkle" -framework Sparkle \
   -Xlinker -rpath -Xlinker @executable_path/../Frameworks
 
