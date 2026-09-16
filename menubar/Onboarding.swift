@@ -53,7 +53,14 @@ final class EnrollController: ObservableObject {
         let pipe = Pipe(); p.standardOutput = pipe; p.standardError = Pipe()
         pipe.fileHandleForReading.readabilityHandler = { h in
             let data = h.availableData
-            guard !data.isEmpty, let s = String(data: data, encoding: .utf8) else { return }
+            // An empty read is EOF. Leaving the handler installed makes
+            // NSFileHandle continuously report the closed descriptor and can
+            // pin FaceKey at a full CPU core after enrollment finishes.
+            guard !data.isEmpty else {
+                h.readabilityHandler = nil
+                return
+            }
+            guard let s = String(data: data, encoding: .utf8) else { return }
             for line in s.split(separator: "\n") {
                 guard let d = line.data(using: .utf8),
                       let ev = (try? JSONSerialization.jsonObject(with: d)) as? [String: Any]
@@ -62,6 +69,7 @@ final class EnrollController: ObservableObject {
             }
         }
         p.terminationHandler = { _ in
+            pipe.fileHandleForReading.readabilityHandler = nil
             DispatchQueue.main.async {
                 if self.phase == .scanning {
                     self.message = L("err.interrupted")
