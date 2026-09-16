@@ -112,19 +112,10 @@ final class AppController: NSObject, NSApplicationDelegate {
             }
         }
 
-        // Ouvrir l'app doit montrer quelque chose. Une app de barre de menus qui se
-        // lance sans rien afficher laisse croire qu'elle n'a pas démarré — sauf quand
-        // c'est macOS qui l'ouvre à l'ouverture de session, où surgir devant
-        // l'utilisateur serait au contraire déplacé. `launchIsDefaultUserInfoKey`
-        // distingue précisément les deux cas.
-        let userLaunched = n.userInfo?[NSApplication.launchIsDefaultUserInfoKey] as? Bool ?? true
-        if userLaunched {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
-                // Sans visage enrôlé, l'enrôlement est la seule chose à faire : on y va
-                // directement plutôt que d'afficher des réglages inertes.
-                if Status.enrolled { self.openSettings() } else { self.openOnboarding() }
-            }
-        }
+        // Always start quietly in the menu bar. macOS may relaunch a login item when a
+        // session becomes active after unlocking, and that launch is not reliably
+        // distinguishable from a Finder launch. Opening a window here therefore made
+        // Settings appear after every unlock. The menu's Open action remains explicit.
         // Drapeaux internes pour régénérer les captures de la documentation. Sans eux,
         // l'écran d'enrôlement ne s'ouvre qu'en l'absence de visage enregistré, donc
         // impossible à photographier sur une machine où l'app est déjà configurée.
@@ -137,6 +128,11 @@ final class AppController: NSObject, NSApplicationDelegate {
     }
 
     func applicationWillTerminate(_ n: Notification) { daemon.stop() }
+
+    // FaceKey is a menu-bar utility. Restoring a previously open Settings window makes
+    // it reappear when macOS relaunches the login item after unlock.
+    func applicationShouldSaveApplicationState(_ app: NSApplication) -> Bool { false }
+    func applicationShouldRestoreApplicationState(_ app: NSApplication) -> Bool { false }
 
     /// Quitter FaceKey arrête le moteur, donc `sudo` redemande le mot de passe — sans
     /// que rien ne le dise. Le moteur doit rester un processus enfant de l'app : lancé
@@ -180,8 +176,9 @@ final class AppController: NSObject, NSApplicationDelegate {
     /// Recliquer sur l'icône dans le Dock, Spotlight ou le Finder alors que l'app
     /// tourne déjà. Sans ceci, le second lancement ne produisait rien du tout.
     func applicationShouldHandleReopen(_ s: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
-        if !flag { openSettings() }
-        return true
+        // Activation/reopen events are also delivered when macOS revives a menu-bar
+        // login item. Keep them quiet; Settings is opened only by the menu's Open item.
+        return false
     }
 
     // App menu bar : ne jamais quitter parce qu'une fenêtre se ferme.
@@ -342,6 +339,7 @@ final class AppController: NSObject, NSApplicationDelegate {
             win.isMovableByWindowBackground = true
         }
         win.center()
+        win.isRestorable = false
         win.isReleasedWhenClosed = false
         return win
     }
